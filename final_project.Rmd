@@ -1,0 +1,631 @@
+---
+title: 'Final Project: Relationships between Volcanic Eruptions and Various Characteristics'
+output:
+  html_document:
+    df_print: paged
+  pdf_document: default
+---
+
+
+
+$\\$
+
+
+
+Author:  Lleyton Emery
+
+Discussants: 
+
+People: Benjamin Mousseau
+
+Websites: https://www.kaggle.com/datasets/jessemostipak/volcano-eruptions?select=eruptions.csv, https://www.axios.com/2018/05/31/chart-every-volcano-that-erupted-since-krakatoa, https://en.wikipedia.org/wiki/Volcanic_explosivity_index 
+
+
+
+
+
+
+
+<!--  
+
+
+This is a template for creating your final project report. It lays out the
+sections that should be in your write-up and describes a little about these
+sections. There is some flexibility to deviate from this structure, for example,
+interweaving more visualizations and analyses could work well.
+
+Your report should be between 5-8 pages long and should contain:
+
+    1. Introduction: 
+      a. What is question you are addressing? 
+      b. Why is important? 
+      c. Where did you get the data?
+      d. What other analyses that been done on the data ?
+      
+    2. Visualizations of the data: one or more plots
+    
+    3. Analyses: models, hypothesis tests, confidence intervals and other
+    inferential statistics that give insight into your question
+    
+    4. Conclusions: What you found, future directions, etc.
+    
+    5. Reflection (do be completed on Canvas)
+       a. What went well? 
+       b. What did you struggle with?
+       c. What analyses did you do that you are not including? etc. 
+
+Please make your report look good by paying attention to detail, using
+additional R Markdown features etc.
+
+If there is additional code or data you would like to include with your report,
+please create a GitHub page and add a link to it in your report. Additionally,
+you can append the full code for your analysis in an appendix section at the end
+of the document, and then include only the most important pieces of code in the
+body of the report. For example, you can exclude details of data cleaning from
+the body of the report. However, include anything central to your analyses, and
+also any information about particular choices you made that might affect the
+results, and why you made those choices, in the body of the report (e.g.,
+explain if data was excluded and why, etc.).
+
+
+
+--> 
+
+
+
+
+
+
+
+
+
+<!-- There are some options that might help make your document look better.  
+Feel free to add additional options here -->
+```{r message=FALSE, warning=FALSE, tidy=TRUE, echo=FALSE}
+
+library(knitr)
+
+# This makes sure the code is wrapped to fit when it creates a pdf
+opts_chunk$set(tidy.opts=list(width.cutoff=60))   
+
+
+# Set the random number generator to always give the same random numbers
+set.seed(230)  
+
+library(dplyr)
+library(ggplot2)
+
+```
+
+
+
+
+
+
+
+$\\$
+
+
+
+
+
+
+
+
+
+# Introduction 
+
+
+<!--  
+
+Write ~1-3 paragraphs describing:
+
+1. What is problem you are addressing and why the problem you are addressing is
+interesting.
+
+2. Where you got the data from, including a link to the website where you got
+the data if applicable.
+
+3. What other analyses have already been done with the data and possibly links
+to other analyses. Also mention if you are using the data in another class or
+for another research project.
+
+
+--> 
+
+In this project, I will analyze the correlation between certain characteristics of volcanoes around the world, such as crust type, location, and volcano type, and the eruptions of those volcanoes. For those who reside near volcanoes, understanding their activity levels and the type of eruptions that occur is of vital importance to maintaining safety. Volcanic eruptions are one of the most violent natural disasters in the world, not only because of the immediate damage, but also due to the lingering environmental effects of the chemicals and ash released during the eruptions. Volcanoes can cause widespread damage through volcanic winters which give rise to devastating famines, but they can also be dangerous to something as simple as aircraft turbines, whose shapes can be altered due to melted ash particles that float in the sky, so investigating why eruptions occur could allow us to make better predictions and be more prepared for the consequences of the eruptions. Although scientists have made huge steps towards truly understanding how volcanic eruptions work, they are still unpredictable, and further analysis of data sets containing history's recognized eruptions could provide valuable insight into which factors are correlated with eruptions.
+
+This data was found on the website Kaggle, which is an online community of data scientists and machine learners who can post their work and allow others to view and analyze their data. The data set originated from the Smithsonian Institution, which is the largest museum, education, and research complex in the world, with multiple location in the United States.
+
+This data had been previously analyzed by Axios, which is an American news website based in Virginia. Axios assessed volcanic eruptions based on elevation and volcano type. Axios made a graph the represents all of the eruption since the historic eruption of Krakatoa in 1883, using a different image to depict each type of volcano (stratovolcano, shield, caldera, and other), with different colors representing the elevations of the volcanoes. Although Axios also found that nearly 200 of the 404 known eruptions have occurred since the year 2000, no deep analysis was done on this data regarding relationships between eruptions and volcanic characteristics, which is what this project will address. This data is not being used in another class or for another research project. 
+
+
+   
+$\\$   
+   
+    
+
+
+
+
+# Results
+
+
+
+$\\$
+    
+
+
+# Data wrangling: Combining two data frames and making new columns that better present the data
+
+
+
+<!--  
+
+Very briefly discuss how you got the data into shape for your analyses. You can
+include some code here, although extensive data cleaning code should be put on
+GitHub and/or in an appendix at the end of the document.
+
+--> 
+
+The page regarding volcanoes on Kaggle had multiple csv files from the Smithsonian Institution, but I wanted data from both to be included in this report. One file, eruptions.csv, had data on the eruptions that have occurred for various volcanoes and the characteristics of those eruptions. The other file, volcano.csv, had data regarding the characteristics of the volcanoes themselves. I only wanted one data frame to be used for this project, so I loaded both files into R and then combined them based on the volcano_number column that was present in both data frames. Each volcano has its own unique ID number, so it made sorting and combining the data relatively straightforward. I also made another data frame that omitted NA values for the VEI index, because I wanted to use the `combined` data frame for many plots, but also wanted a data frame without rows with NA VEI values for my analysis. 
+
+I also wanted to use the tectonic_settings variable to measure correlation between want kind of plates the volcano is located on and the eruptions that occur. This variable had data on both the type of zone the volcano is located in and what kind of crust it is located on. Conveniently, these two characteristics were separated by the backslash character, so I could take the first part and second part of each row's tectonic_settings string and put it in its own column.
+
+The primary_volcano_type variable also had too many unique names. Many were repetitions of each other, but some had (s) or (es) on the end to specify plurality. Since this was not important to understanding volcano type, I made a new column that removed these unnecessary endings. This way, when I make a plot based on volcano type, they will be grouped into the same category and the legend will not show unnecessary names.
+
+```{r message=FALSE, warning=FALSE, tidy=TRUE, echo=FALSE}
+
+volcanoes <- read.csv("volcano.csv")     # load in data frame with volcano characteristics
+eruptions <- read.csv("eruptions.csv")     # load in data frame with eruption characteristics
+
+# combine both data frames by the volcanoes' ID numbers
+combined <- merge(volcanoes, eruptions, by = "volcano_number")    
+
+# make two columns about zone and crust type by separating the data in the tectonic_settings variable
+# also make new column that removes parentheses from primary_volcano_type variable
+combined <- combined |>
+  mutate(zone = sub(" /.*", "", tectonic_settings)) |>
+  mutate(crust = sub(".*/ ", "", tectonic_settings)) |>
+  mutate(primary_vol_type_modified = gsub("\\s*\\([^\\)]+\\)","",as.character(primary_volcano_type)))
+
+no_na <- combined |>
+  na.omit(vei)
+
+# load in data regarding the longitude and latitude values of each country as well as their populations in 2020
+country_data <- read.csv("world_country_and_usa_states_latitude_and_longitude_values.csv")
+population_data <- read.csv("population_by_country_2020.csv")
+
+# create data frame with long and lat values for each country
+location_data <- country_data |>
+  left_join(combined, by = c("country" = "country"))
+
+# create data frame for map which adds country population values and a new variable for eruptions to population ratio for each country 
+eruptions_by_country <- population_data |>
+  left_join(location_data, by = c("Country..or.dependency." = "country")) |>
+  group_by(Country..or.dependency.) |>
+  mutate(eruptions_per_pop = n() / (Population..2020.)) |>
+  arrange(desc(eruptions_per_pop))
+
+# used to find countries with largest eruption to person ratio so we can plot them 
+unique_eruptions_counts <- unique(eruptions_by_country$eruptions_per_pop)
+largest_erup_counts <- unique_eruptions_counts[1:10]
+unique_countries <- unique(eruptions_by_country$Country..or.dependency.)
+largest_countries <- unique_countries[1:10]
+
+```
+
+$\\$
+    
+
+
+
+
+# Visualize the data: World map of eruptions with nearby population and and volcano type specified, as well as a barplot of the countries with the highest eruptions to population ratios
+
+
+
+<!--  
+
+Create one or more plots of your data. Describe the plot(s), what they shows,
+and why they are of interest to your analysis. Include the code to create these
+plots in the R chunk below. You can also discuss the plots after the code too.
+Finally, be sure to make plots as clear as possible (clear axis labeling,
+legends and captions) so that it is easy for the reader to quickly understand
+the central information being conveyed.
+
+--> 
+
+In order to visualize the eruptions, I plotted the all of the eruptions in the data set on a world map. Each point corresponds to an eruption in history, so it is easy to see where in the world eruptions are most frequent. A low alpha level was used because points often overlap in these denser regions, so it was important to be able to see all of the different points on the map. Additionally, each point has a certain color and size, with the color corresponding to the type of volcano that erupted and the size corresponding to the population within ten kilometers of the area of the eruption. We want to understand how volcano type correlates to the number of eruptions, so this the color of the point is important to visualize. Also, the central idea of this project is to understand volcanoes to better protect those living near them, so visualizing population density near erupting volcanoes can provide valuable insight into whether people understand the dangers of the volcanoes near them or whether more awareness needs to be raised regarding the safety measures that need to prepare for possible eruptions.
+
+I also created a bar plot to show what could be considered the places with the most dangerous volcanoes. By loading in data sets with population values for each country, I was able to make a variable that represents the eruptions to population ratio, with population being as of 2020. I chose to visualize the data in this way instead of simply looking at the countries with the most eruptions so I could account for size discrepancies between countries. A large country like the United States may have more eruptions than a smaller country like Iceland, but the population of the United States is so large that number of eruptions is dwarfed by the size of the population. Countries that exhibit high eruption to population ratios either have many eruptions for a small land size, or do not have many people populating the country, which could be correlated with eruptions as well because people are afraid to live in places with many active volcanoes. Because of this, I believe this statistic is a good indicator of whether these countries are some of the most dangerous places to live due to their volcanoes. The countries with large eruption to population ratios tended to be small islands, which makes sense because islands are often home to many active volcanoes. Although these countries tended to be smaller, such as Iceland, the Falkland Islands, and Tonga, the population density per eruption is relatively high compared to most of the other major countries of the world, meaning that people residing in these places should be the most aware of their surroundings and the possible dangers of living near active volcanoes.
+
+The last plot shows the VEI values of eruptions for volcanoes of different crust thicknesses. The Volcanic Explosivity Index, or VEI, is a scale that describes the size of an eruption based on its intensity and magnitude. We want to know if the tectonic location or the crust thickness of the erupting volcano affects the size of the eruption. It appears like there may be some differences between VEI values and crust thickness, so this will be investigated in the analysis section. 
+
+
+
+
+```{r message=FALSE, warning=FALSE, tidy=TRUE}
+
+# One country's name is barely cut off, but I didn't want to make the font an unreadably too small size
+barplot(largest_erup_counts, names.arg = largest_countries, ylab = "Eruptions per Person", cex.axis=0.5, cex.names=0.5, las = 2, col = "firebrick2")
+
+
+# load library tidyverse
+library(tidyverse)
+  
+# create data for world coordinates using map_data() function
+world_coordinates <- map_data("world")
+
+# plot map and plot points of eruptions
+ggplot() +
+  labs(color = "Volcano Types") +
+  theme(legend.key.size = unit(0.2, 'cm')) +
+  ggtitle("World History of Eruptions") +
+  xlab("Longitude") +
+  ylab("Latitude") +
+  geom_map(
+    data = world_coordinates, map = world_coordinates,
+    aes(long, lat, map_id = region), color = "black", fill = "lightyellow"
+  ) +
+  geom_point(data = combined, aes(longitude.x, latitude.x, color = primary_vol_type_modified,
+            size=population_within_10_km), alpha = 0.5)
+  
+#visualize eruptions for different volcano types
+ggplot(no_na, aes(x = crust, y = vei, fill = crust)) +
+  ggtitle("Boxplots of VEI values for Eruptions from Volcanoes of Different Crust Types") +
+  geom_boxplot(outlier.color = "black", outlier.alpha = 0.4, outlier.size = 4) +
+  scale_fill_manual(values = c("chartreuse", "pink", "coral1", "lightblue"), name = "Crust Thickness") +
+  scale_x_discrete(labels = c("Continental", "Unknown", "Intermediate", "Oceanic")) +
+  xlab("Crust Type") +
+  ylab("VEI Values")
+
+
+
+
+
+
+
+  
+
+
+
+```
+
+
+
+
+<!--  
+
+Possible additional discussion of the plots here. 
+
+--> 
+
+These plots reveal much about the location of eruptions: according to our bar graph, most eruptions by population occur in island nations, and our world map shows that most eruptions seem to occur on the coasts of continents or on islands. Our map also reveals which types of volcanoes have the most eruptions, because colors corresponding to stratovolcano, shield, and caldera appear the most often on the map. Although these insights are relevant and important to understanding volcanic safety, they fail to analyze the relationship between the characteristics of the volcanoes, including primary type, location, and elevation, and the intensity of their eruptions. In the next section, modeling and analysis will be conducted to determine if any characteristics are correlated with eruption intensity, and if so, what the strength of the correlations are.  
+
+
+
+
+
+
+$\\$    
+    
+
+
+
+
+
+
+
+    
+
+# Analyses: Two-way ANOVA and Difference in Means 
+
+
+
+<!--  
+
+Build linear models, run hypothesis tests, create confidence intervals and/or
+run simulations to answer questions that are of interest.
+
+--> 
+
+Analysis 1: Using a two-way ANOVA test to see if volcano type and world location affect Volcanic Explosivity Index.
+
+Main effect for volcano type:
+
+Null hypothesis: every effect for the volcano type is zero, meaning the mean VEI values do not differ depending on the volcano type.
+
+Alternative hypothesis: at least one effect for the volcano type condition is not zero, meaning mean the VEI values differ depending on the volcano type.
+
+$\\H_0:\alpha_1 = \alpha_2 = ... = \alpha_j = 0$
+
+$\\H_A:\alpha_j \neq 0$ for some $\\j$ 
+
+where $\\\alpha_j$ is the effect for the volcano type factor at level j
+
+Main effect for location condition:
+
+Null hypothesis: every effect for the location condition is zero, meaning the mean VEI values do not differ depending on the location condition.
+
+Alternative hypothesis: at least one effect for the location condition is not zero, meaning the mean VEI values differ depending on the location condition. 
+
+$\\H_0:\beta_1 = \beta_2 = ... = \beta_k 0$
+
+$\\H_A:\beta_k \neq 0$ for some $\\k$ 
+
+where $\\\beta_k$ is the effect for the location factor at level k
+
+Interaction effect for volcano type and location
+
+Null hypothesis: every effect for the combined volcano type and location condition is zero, meaning mean VEI values do not differ depending on the interaction of volcano type and location.
+
+Alternative hypothesis: at least one effect for the combined volcano type and location condition is not zero, meaning mean VEI values differ depending on the interaction of volcano type and location.
+
+$\\H_0:$ all $\gamma_{jk} = 0$
+
+$\\H_A:$ $\gamma_{jk} \neq 0$ for some j, k
+
+```{r message=FALSE, warning=FALSE, tidy=TRUE}
+# main effects only
+fit_main <- lm(vei ~ region + primary_vol_type_modified, data = no_na)
+anova(fit_main)
+
+# interaction effects
+fit_int <- lm(vei ~ region*primary_vol_type_modified, data = no_na)
+anova(fit_int)
+
+
+```
+
+The assumptions for this two-way ANOVA test are in the appendix to save space. These conditions are essentially met, so no variance stabilizing transformations need to be made. The p-value for the volcano type condition is 2.2e-16 and the p-value for the volcano type condition is 2.327e-08. Since both are much less than 0.05, then they are both statistically significant, and we can reject the null hypothesis and accept that at least one effect for the volcano type and at least one effect for the location condition is not 0. The p-value for the interaction condition is 0.0002571, which is also less than 0.05, which means that we can reject the null hypothesis and accept that there is an interaction effect. The plot in the appendix shows that this effect is rather scattered, but certain regions, such as Kamchatka/Mainland Asia, seem to have steeper slopes between points than other regions, such as Alaska, which suggests that there is more of an amplification effect where Kamchatka interacts with volcano type than when Alaska interacts with volcano type.     
+
+
+Analysis 2: Hypothesis for difference of two means: crust type
+
+The oceanic crust and continental crust are the two most common types of crusts that volcanoes inhabit. They are also the two most different, with oceanic crust being the thinnest and continental crust being the thickest. It may seem like it is insignificant to analyze the VEI of volcanoes that lie in oceanic crust when the goal is human safety, since oceanic crust lies almost entirely on the ocean floor. However, there are many places in the world where oceanic crust actually is on land where humans live. Not only that, but violent eruptions under the ocean can cause significant damage to coastal areas in the form of tsunamis and unhealthy chemicals, so comparing continental crust and oceanic crust volcanoes is still relevant to our understanding of volcano safety. 
+
+Null Hypothesis: the mean VEI for eruptions of volcanoes in crust of type oceanic is equal to the mean VEI for eruptions of volcanoes in crust type continental.
+
+Alternative Hypothesis: the mean VEI for eruptions of volcanoes in crust of type oceanic is different from the mean VEI for eruptions of volcanoes in crust type continental.
+
+Our significance level is 0.05.
+
+$\\H_0: \mu_o = \mu_c$
+
+$\\H_A: \mu_o \neq \mu_c$
+
+$\\\alpha = 0.05$
+
+
+```{r message=FALSE, warning=FALSE, tidy=TRUE}
+
+#observed statistic (Welch's)
+oceanic <- no_na[no_na$crust == "Oceanic crust (< 15 km)", ]$vei
+continental <- no_na[no_na$crust == "Continental crust (>25 km)", ]$vei
+t_stat_numerator <- (mean(oceanic) - mean(continental))
+t_stat_denominator <- sqrt( var(oceanic)/length(oceanic) + var(continental)/length(continental))
+(t_stat <- t_stat_numerator/t_stat_denominator)
+
+#plot of null t-distribution and calculate p-value
+deg_free <- min(length(oceanic), length(continental)) - 1
+x_vals <- seq(-10, 10, by = 0.001)
+y_vals <- dt(x_vals, deg_free)
+plot(x_vals, y_vals, type = "l",
+  main = "Null Distribution for Welch's T-Statistics",
+  xlab = "T-Statistics",
+  ylab = "Probability", xlim = c(-13, 10))
+  abline(v = t_stat, col = "red")
+
+# get p-value
+(crust_p_val <- pt(t_stat, deg_free))
+  
+# check assumptions
+
+#sample size of low and high pollution town groups
+(length(oceanic))
+(length(continental))
+  
+# check variances
+(var(oceanic))
+(var(continental))
+
+
+
+```
+The first assumption that needs to be met for the Welch's t-test to be used is that the sample sizes need to be greater than 30, which is the case here for our sample sizes of 441 and 1200. The second assumption that needs to be met is that the variances of both samples must be the same. The variances for these two groups are 1.366584 and 0.7557068, which are not exactly the same, but are both fairly close to 1. Therefore, this test will most likely still be valid. Our observed Welch's t-statistic was -8.499296, and our resulting p-value was 1.493781e-16, which is much smaller than 0.05. Since our t-statistic is negative, this would imply that eruptions from continental crust volcanoes have VEI values that are higher than those from oceanic crust volcano eruptions. If we look back at our boxplots from the visualization section, there are many outliers that are pulling the mean VEI value of the continental eruptions upwards, which could possibly be what is contributing to the difference in mean VEI values between continental and oceanic crusts. In the appendix, I have removed the outlier values for the continental data and rerun the t-test to see if there still was a significant difference between continental and oceanic crust VEI values. When this was complete, our new t-statistic was still negative at -2.896091, and our p-value was still less than our significance level of 0.05 at 0.001983366, but it was much greater than our previous p-value. Since the p-value is still less than our alpha level, we can reject the null hypothesis and accept that there is a difference between mean VEI values of eruptions for volcanoes from the continental crust when compared to the oceanic crust.  
+
+
+
+$\\$
+
+
+    
+    
+    
+    
+    
+    
+
+
+# Conclusion 
+
+
+
+<!--  
+
+
+~1-2 paragraphs summarizing what you found, how the findings address your
+question of interest, and possible future directions. Please make sure describe
+your conclusions in an intuitive way, and make sure that your argument is strong
+and backed by solid evidence from your data.
+
+
+
+-->
+
+The goal of this project was to analyze data on volcanoes and their eruptions in order to gain a better understanding on which factors are correlated with eruptions and their intensities. I wanted to assess this in order to improve human safety and prevent future volcano deaths that could have been prevented if our knowledge on eruptions was deeper. Through our visualizations, we found that most eruptions occur in coastal regions or on islands, and the most common volcano types are stratovolcano, caldera, and shield. Additionally, we found that eruption intensity does depend on which types of volcanoes are erupting and where the volcanoes are located individually, and these effects are also amplified by the combination of these two factors. Now that we know that eruption intensity affected by these factors, further analysis can be done that looks at each of these variables individually and which values have which effects on eruptions. The most interesting part of this analysis was the difference in means hypothesis which assessed whether there was a difference in mean eruption intensity from oceanic crust volcanoes and continental crust volcanoes. I found that there was a difference in these means, with continental crust volcanoes having a stronger intensity of eruptions than oceanic crust volcanoes. This could be because continental crust volcanoes often form at subduction zones, where the oceanic crust slides below the continental crust, heating the rock with its friction and creating a volcano. These subduction zones are most often found in coastal areas, so it would be reasonable to conclude that coastal areas not only have high volcano density but also high eruption intensities, making them even more dangerous places to live. The next step for this project could be to confirm whether these continental crust volcanoes with high intensities do in fact reside in subduction zones, and what that means for local coastal populations of people in terms of safety.     
+
+
+
+
+
+
+
+
+$\\$
+
+
+
+
+
+
+# Reflection
+
+
+<!--  
+
+
+Reflection  
+
+Write one paragraph describing what went well with this project and what was
+more difficult. Also describe any additional things you tried that you did not
+end up including in this write-up, and approximately how much time you spend
+working the project.
+
+Finally, please go to Canvas and answer a few questions related to how this project went: https://yale.instructure.com/courses/79947/quizzes/52421
+
+
+
+-->
+
+This project was certainly intriguing, because I was able to apply skills I learned in the class regarding analysis of a topic I found interesting. Wrangling the data and running tests were some of the easier parts of the project, because we went over many possibilities in class that gave me a wide range of options to choose from. The visualizations were the hardest part, because the graphs were quite difficult to format, and coming up with good plot ideas for this data was a bit difficult because there were not many linear relationships. I tried some visualizations with linear regression that did not work because the dependent variable I was analyzing had discrete values. I was also planing on conducting tests regarding linear regression, but this data did not seem to support this. I spent about 12 hours on this project, and it was a very rewarding experience for me. 
+
+
+$\\$
+
+
+
+
+## Appendix
+
+
+<!--  
+
+
+You can include a complete listing of your code here if you could not fit it
+into the body of the document. Make sure your code is well commented and easy to
+read - i.e., use meaningful object names, separate your code into sections,
+describe what each section is doing, use good formatting, etc.
+
+
+-->
+
+```{r message=FALSE, warning=FALSE, tidy=TRUE}
+
+# data wrangling
+
+volcanoes <- read.csv("volcano.csv")     # load in data frame with volcano characteristics
+eruptions <- read.csv("eruptions.csv")     # load in data frame with eruption characteristics
+
+# combine both data frames by the volcanoes' ID numbers
+combined <- merge(volcanoes, eruptions, by = "volcano_number")    
+
+# make two columns about zone and crust type by separating the data in the tectonic_settings variable
+# also make new column that removes parentheses from primary_volcano_type variable
+combined <- combined |>
+  mutate(zone = sub(" /.*", "", tectonic_settings)) |>
+  mutate(crust = sub(".*/ ", "", tectonic_settings)) |>
+  mutate(primary_vol_type_modified = gsub("\\s*\\([^\\)]+\\)","",as.character(primary_volcano_type)))
+
+# created so rows with no VEI values would not be included in calculations for VEI
+no_na <- combined |>
+  na.omit(vei)
+
+# the following data will be used for plots
+
+# load in data regarding the longitude and latitude values of each country as well as their populations in 2020
+country_data <- read.csv("world_country_and_usa_states_latitude_and_longitude_values.csv")
+population_data <- read.csv("population_by_country_2020.csv")
+
+# create data frame with long and lat values for each country
+location_data <- country_data |>
+  left_join(combined, by = c("country" = "country"))
+
+# create data frame for map which adds country population values and a new variable for eruptions to population ratio for each country 
+eruptions_by_country <- population_data |>
+  left_join(location_data, by = c("Country..or.dependency." = "country")) |>
+  group_by(Country..or.dependency.) |>
+  mutate(eruptions_per_pop = n() / (Population..2020.)) |>
+  arrange(desc(eruptions_per_pop))
+
+# used to find countries with largest eruption to person ratio so we can plot them 
+unique_eruptions_counts <- unique(eruptions_by_country$eruptions_per_pop)
+largest_erup_counts <- unique_eruptions_counts[1:10]
+unique_countries <- unique(eruptions_by_country$Country..or.dependency.)
+largest_countries <- unique_countries[1:10]
+
+
+
+```
+
+
+```{r message=FALSE, warning=FALSE, tidy=TRUE}
+
+# removing outliers from continental crust data and rerunning hypothesis test 
+
+continental_removed <- continental[!continental %in% 3:8]
+
+#observed statistic (Welch's)
+t_stat_numerator_2 <- (mean(oceanic) - mean(continental_removed))
+t_stat_denominator_2 <- sqrt( var(oceanic)/length(oceanic) + var(continental_removed)/length(continental_removed))
+(t_stat_2 <- t_stat_numerator_2/t_stat_denominator_2)
+
+#plot of null t-distribution and calculate p-value
+deg_free_2 <- min(length(oceanic), length(continental_removed)) - 1
+x_vals <- seq(-10, 10, by = 0.001)
+y_vals <- dt(x_vals, deg_free_2)
+plot(x_vals, y_vals, type = "l",
+  main = "Null Distribution for Welch's T-Statistics with Outliers Removed",
+  xlab = "T-Statistics",
+  ylab = "Probability", xlim = c(-13, 10))
+  abline(v = t_stat, col = "green")
+
+# get p-value
+(crust_p_val_2 <- pt(t_stat_2, deg_free_2))
+
+
+```
+
+```{r message=FALSE, warning=FALSE, tidy=TRUE}
+
+# checking assumptions for two-way ANOVA test in analysis
+
+plot(fit_int)
+
+volcano_type_sd <- no_na |>
+  group_by(primary_vol_type_modified) |>
+  summarise(vol_sd = sd(vei)) |>
+  na.omit(vol_sd)
+
+location_sd <- no_na |>
+  group_by(region) |>
+  summarise(region_sd = sd(vei)) |>
+  na.omit(region_sd)
+
+(max(volcano_type_sd$vol_sd)/sort(volcano_type_sd$vol_sd)[2]) # one of the standard deviations was zero, providing in infinite value for this (most likely a mistake), so I took the second smallest value 
+(max(location_sd$region_sd)/min(location_sd$region_sd))
+
+# plot for the interaction effect (this visualization was very hard to understand so I did not include it in the main body of the report)
+
+interaction.plot(x.factor = no_na$primary_vol_type_modified, trace.factor = no_na$region, 
+                 response = no_na$vei, 
+                 type = "b", legend = TRUE, 
+                 xlab = "Volcano Type", ylab="Region",
+                 main = "Volcano Type and Region Interaction Effect on VEI Values",
+                 pch=c(1,19), col = c("#00AFBB", "#E7B800", "#FF0000"))
+
+
+```
+
+The Q-Q plot shows that the data in each group is relatively normal because the plot is mostly linear. Also, the ratio of the maximum standard deviation of VEI to the minimum standard deviation of the reaction time when grouped by volcano type is 2.283347, which is greater than 2, and the ratio of the maximum standard deviation of reaction time to the minimum standard deviation of the VEI when grouped by region is 2.423882, which is also greater than 2, so this condition is technically not met. However, both ratios are fairly close to 2, so the analysis may still be valid. There are so many different groups for each variable that it is extremely difficult for all of the variances to be equal, which could be a limitation for this anlysis, but this comes very close to meeting all assumptions.
